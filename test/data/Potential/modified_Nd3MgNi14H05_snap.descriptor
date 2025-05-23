@@ -1,0 +1,18 @@
+# H Mg Nd Ni MLIP parameters
+# Descriptor:  snap
+# Model:       linear
+
+rcutfac         6.0
+twojmax         8
+rfac0           0.99363
+rmin0           0.0
+switchflag      1
+bzeroflag       1
+wselfallflag    0
+
+
+
+nelems      4
+elems       H Mg Nd Ni 
+radelems    0.5 0.5 0.5 0.5
+welems      0.009900990099009901  0.1188118811881188  0.594059405940594  0.27722772277227725

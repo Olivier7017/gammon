@@ -1,0 +1,60 @@
+import os
+from ase.build import bulk
+from ase.io import read, write
+from mlacs.mlip import AceDescriptor, TensorpotPotential
+from mlacs.mlip.utilities import acefit_traj
+
+"""
+Example of a MLACS ACE fitting of Au
+"""
+
+bconf_dict = {
+    "deltaSplineBins": 0.001,
+    "elements": ['Au'],
+    "embeddings": {
+        "ALL": {
+            "npot": 'FinnisSinclairShiftedScaled',
+            "fs_parameters": [1, 1],
+            "ndensity": 1,
+            },
+        },
+    "bonds": {
+        "ALL": {
+            "radbase": "ChebExpCos",
+            "NameOfCutoffFunction": "cos",
+            "radparameters": [3.75],
+            "rcut": 5,
+            "dcut": 0.01,
+            },
+        },
+    "functions": { # From Lysogorskiy2023 on Cu -> Nature
+        "ALL": { # 15, 60, 160, 300, 144, 50, 3 elems
+            "nradmax_by_orders": [15, 5, 4, 3, 1],
+            "lmax_by_orders": [0, 3, 2, 2],
+            }
+        }
+    }
+
+fn = "newDB4_corr.traj"
+traj = read(fn, index=":")
+
+fitting_dict = {'maxiter': 5000, 'fit_cycles': 1, 'repulsion': 'auto',
+               'optimizer': 'BFGS',
+               'optimizer_options': {'disp': True, 'gtol': 0, 'xrtol': 0}}
+
+
+ace_descriptor = AceDescriptor(atoms=traj[0],
+                               free_at_e={'Au': 0}, 
+                               tol_e = 0.5,  # meV/at
+                               tol_f = 25.0,  # meV/ang
+                               bconf_dict=bconf_dict,
+                               fitting_dict=fitting_dict,
+                               rcut=5.0)
+tp = TensorpotPotential(descriptor=ace_descriptor)
+tp.descriptor.n_fit_attempt = 20
+
+if os.path.exists("restart.yaml"):
+    acefit_traj(traj=traj, mlip=tp, weights=None, initial_potential="restart.yaml")
+else:
+    acefit_traj(traj=traj, mlip=tp, weights=None)
+

@@ -1,0 +1,65 @@
+from pathlib import Path
+import numpy as np
+from ase.io import read,write
+import subprocess
+
+def main():
+    fit_pot()
+
+def fit_pot():
+    train = get_traj()
+    add_info_dft_value(train)
+    train_fn = write_file(train)
+    cmd = mace_command(train_fn)
+    with open("mace.log", "w") as log_file:
+        subprocess.run(" ".join(cmd), stdout=log_file, stderr=log_file, shell=True)
+    print(" ".join(cmd))
+
+def add_info_dft_value(train):
+    """
+    Correct the energy of both trajectory
+    """ # TODO :: ADD SPIN AND REDO ISOLATED_E
+
+    # info.energy
+    for i in range(len(train)):
+        e = train[i].get_potential_energy()
+        train[i].info['dft_energy'] = e
+
+    # info.forces
+    for i in range(len(train)):
+        train[i].arrays['dft_forces'] = train[i].get_forces()
+
+def write_file(train):
+    write("train_macefit.xyz", train)
+    return Path.cwd() / "train_macefit.xyz"
+
+def mace_command(train_fn):
+    E0s = {79: 0.E+00}
+    
+    cmd = ["mace_run_train"]
+    cmd.append('--model=MACE')
+    cmd.append('--num_interactions=2') # HELP
+    cmd.append('--num_channels=16') # HELP
+    cmd.append('--max_L=0') # HELP
+    cmd.append('--correlation=2') # HELP
+    cmd.append('--r_max=5.0')
+    cmd.append('--max_ell=2')
+    cmd.append('--name="DB4"')
+    cmd.append('--restart_latest')
+    cmd.append(f'--train_file="{train_fn}"')
+    cmd.append(f'--E0s="{E0s}"')
+    cmd.append('--energy_key="dft_energy"')
+    cmd.append('--forces_key="dft_forces"')
+    cmd.append('--device=cuda')
+    cmd.append('--batch_size=10') # HELP
+    cmd.append('--max_num_epochs=2000')
+    cmd.append('--swa')
+    cmd.append('--seed=123')
+    return cmd
+
+def get_traj():
+    traj = read("6kK.traj", index=":")
+    return traj
+
+main()
+                 
