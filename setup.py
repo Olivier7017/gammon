@@ -7,13 +7,16 @@ setup(
     author='Olivier Nadeau',
     author_email='oliviernadeau97@gmail.com',
     packages=find_packages(),
+    include_package_data=True,  # <--- include non-code files
+    package_data={'gammon.utilities': ['nd3_data/*.npy']},
     install_requires=[
-        # 'ase',
-        # 'numpy',
+        'ase',
+        'numpy',
         # 'pyace',
         # 'tensorflow',
         # 'mace-torch',
-        # 'matplotlib',
+        'matplotlib',
+        'spglib',
     ],
     entry_points={
         'console_scripts': [
