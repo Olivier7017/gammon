@@ -40,12 +40,20 @@ class OneState:
         self.write_buffer = [[], []]
         self.step = 0
 
+        # Note that : get_absorption_volume takes empty + filled sites
+        self.is_fixed_lattice = self.struct.get_absorption_volume() < 1e-6
+
         # Prepare RNG
         self.rng = np.random.default_rng(rng_seed + self.proc_id)
         self.struct.set_rng(self.rng)
 
         # Preparation
         self.calc.prepare_calc(struct)
+        
+        if self.is_fixed_lattice: 
+            if (prob[MOV] + prob[VOP] + prob[VOM]) > 1e-8:
+                e = "Cannot have operation MOV, VOM, VOP in fixed lattice"
+                raise ValueError(e)
 
     def run(self, nstep):
         """
@@ -80,7 +88,6 @@ class OneState:
         for op in [MOV, SWP, ADD, DEL, VOP, VOM]:
             if r < prob[op]:
                 break
-
         self.tried[op] += 1
         new_at, new_H = self.struct.try_operation(op)
         is_accepted = 0
@@ -103,14 +110,14 @@ class OneState:
     def metropolis(self, curr_E, new_E, prefactor):
         """
         Use Metropolis algorithm to determine if a move is accepted
-        P_acc = min[1, 1/L^3 * V/(N+1) exp(-beta (dE - mu))]
-        P_del = min[1, L^3*N/V exp(-beta (dE - mu))]
+        P_acc = min[1, V_abs/V * 1/L^3 * V/(N+1) exp(-beta (dE - mu))]
+        P_del = min[1, V/V_abs * L^3*N/V exp(-beta (dE - mu))]
         P_mov = min[1, exp(beta*dE)]
         P_swp = min[1, exp(beta*dE)]
         L is the thermal DeBroglie wavelength
 
         Input : Energy (eV) of the initial structure and the tried one
-                Prefactor is either : L^3*N/V, 1/L^3*V/(N+1) or 1
+                Prefactor is either : L^3*N/V_abs, (V_abs/(L^3 * (N+1)) or 1
         Output : If the move is accepted
 
         Warning : I'm doing min[1, (prefactor * np.exp)] which is not equal
@@ -124,36 +131,57 @@ class OneState:
     def calc_prefactor(self, op):
         """
         Calculate the prefactor for the metropolis algorithm according to
-        Add : 1/L^3 * V/(N+1) or 1
-        Del : L^3*N/V
         Mov/Swp : 1
+        Normal GCMC lattice : 
+         Add : V_abs/V * 1/L^3 * V/(N+1) or 1
+         Del : L^3*N/V
+        Fixed Site GCMC :
+         Add : (nsite-N)/(N+1) -> I don't think there is 1/L^3 ... to confirm  
+         Del : N / (nsite-N+1) -> I don't think there is L^3 ... to confirm  
 
         Note : There is another factor corresponding to the add which is only
                done in an absorption site. It is calculated in calc_prob
         """
         if op == MOV or op == SWP or op == VOP or op == VOM:
             return 1
-
-        V = self.struct.get_volume()
+        
+        nsites = len(self.struct.abs_sites)
         N = self.struct.nH
-        if op == DEL:
-            return self.tdbw3 * N / V
-        if op == ADD:
-            return V / (self.tdbw3 * (N + 1))
+
+        if self.is_fixed_lattice:
+            if op == DEL:
+                return N / (nsites - N + 1)
+            if op == ADD:
+                return (nsites - N) / (N + 1)
+        else:
+            V = self.struct.get_volume()
+            abs_V = self.struct.get_absorption_volume()
+            if self.struct.only_add_empty:  # Only insert in empty sites
+                abs_V = abs_V * ((nsites - N) / nsites)
+
+            if op == DEL:
+                return self.tdbw3 * N / abs_V
+            if op == ADD:
+                return abs_V / (self.tdbw3 * (N + 1))
 
     def calc_prob(self):
         """
         Compute the add operation probability based on available absorption
         volume and full structure volume. Also renormalize prob.
         """
+        # Renormalized just to be safe
         prob = self.prob.copy()
-        abs_V = self.struct.get_absorption_volume()
-        V = self.struct.get_volume()
-        if self.struct.only_add_empty:  # Only insert in empty sites
-            nsites = len(self.struct.abs_sites)
-            abs_V = abs_V * ((nsites - self.struct.nH) / nsites)
-        prob[2] = prob[2] * (abs_V/V)
-        return np.cumsum(prob / np.sum(prob))
+        return np.cumsum(prob / np.sum(prob))  
+        
+        # Old scheme which may be wrong
+        #prob = self.prob.copy()
+        #abs_V = self.struct.get_absorption_volume()
+        #V = self.struct.get_volume()
+        #if self.struct.only_add_empty:  # Only insert in empty sites
+        #    nsites = len(self.struct.abs_sites)
+        #    abs_V = abs_V * ((nsites - self.struct.nH) / nsites)
+        #prob[2] = prob[2] * (abs_V/V)
+        #return np.cumsum(prob / np.sum(prob))
 
     def sample(self, operation, isaccepted):
         """

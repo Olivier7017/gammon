@@ -21,9 +21,9 @@ def test_analytical_hessian(root):
     e0, x, ifc = get_nd3_data()
 
     # 1. Define GCMC object
-    rcut = 0.25
+    rcut = 0.4
     rcut_swit = 0.
-    chem_pot = 0.0875
+    chem_pot = -0.075
 
     struct = Structure(struct_fn, x, site_rcut=rcut)
     assert len(struct.abs_sites.abs_sites) == total_nsites
