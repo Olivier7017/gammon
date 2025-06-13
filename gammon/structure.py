@@ -308,6 +308,12 @@ class Structure():
                     for i in range(len(self.abs_sites))])
         return V
 
+    def get_onesite_volume(self):
+        """
+        Return the volume of one absorption site (ang**3)
+        """
+        return 4/3*np.pi*self.abs_sites.abs_sites[0].rcut**3
+
     def get_volume(self):
         """
         Get the volume of the atom object
