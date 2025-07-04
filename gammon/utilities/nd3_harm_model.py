@@ -2,7 +2,7 @@ import numpy as np
 from pathlib import Path
 
 
-def get_nd3_data(quantum_corr=True, hse_corr=True, zpe_corr=False):
+def get_nd3_data(quantum_corr=False, hse_corr=True, zpe_corr=False):
     """
     Returns Nd3MgNi14-2H absorption sites information :
       e0 (meV)

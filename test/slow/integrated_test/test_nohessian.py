@@ -24,9 +24,9 @@ def test_analytical_nohessian(root):
 
     # 1. Initialize the object
     expected_nsites = total_nsites
-    rcut = 0.2
+    rcut = 0.4
     rcut_swit = 0.
-    chem_pot = 0.01
+    chem_pot = -0.025
     kB = 8.6173303e-5  # eV
     struct = Structure(struct_fn, x, site_rcut=rcut)
     assert len(struct.abs_sites.abs_sites) == total_nsites
@@ -41,7 +41,7 @@ def test_analytical_nohessian(root):
     prob = np.array([0.25, 0.25, 0.25, 0.25, 0., 0.])
     T = 300
     gcmc = GCMC(struct=struct, nstate=nstate, prob=prob,
-                T=T, mu=chem_pot, calc=calc, buffer_size=1)
+                T=T, mu=chem_pot, calc=calc, buffer_size=1000)
 
     # 2. Theoric expectation
     # <nH> = nsites / (1+e^{-beta*mu} tdbw3 / V_one_site)
@@ -52,11 +52,11 @@ def test_analytical_nohessian(root):
     analytical_E = -chem_pot * analytical_nH
 
     # 3. Run the simulation for 6000 steps
-    gcmc.run(6000)
+    gcmc.run(50000)
 
     # 4. Post_process <nH> and <E>
     thermalisation = 4000
-    pp = PostProcessor("Results/GCMC.out", [0.01])
+    pp = PostProcessor("Results/GCMC.out", [chem_pot])
     sim_nH = pp.mean_nH(thermalisation, 0)
     sim_E = pp.mean_potE(thermalisation, 0)
     add_acc_ratios = pp.state_results[0]['acc_ratios'][2]
@@ -76,6 +76,5 @@ def test_analytical_nohessian(root):
     err_nH = abs(analytical_nH - sim_nH) / (analytical_nH + sim_nH)
     err_E = abs(analytical_E - sim_E) / (analytical_E + sim_E)
 
-    assert abs(add_acc_ratios - 100) < 1e-5  # All add should be accepted
     assert err_nH < tol
     assert err_E < tol

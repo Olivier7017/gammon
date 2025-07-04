@@ -97,7 +97,6 @@ class OneState:
                                                    mu=self.mu,
                                                    proc_id=self.proc_id)
             prefactor = self.calc_prefactor(op)
-            print("OP, prefactor, nH", op, prefactor, len(self.struct.h_atoms[0]))
             is_accepted = self.metropolis(curr_E=self.struct.curr_E,
                                           new_E=new_E,
                                           prefactor=prefactor)
@@ -148,7 +147,6 @@ class OneState:
         
         nsites = len(self.struct.abs_sites)
         N = self.struct.nH
-        print("TDBW3", self.tdbw3)
 
         if self.is_fixed_lattice:
             if op == ADD:
@@ -159,7 +157,7 @@ class OneState:
             V = self.struct.get_volume()
             V_site = self.struct.get_onesite_volume()
             if op == ADD:
-                return V_site ((nsites - N)) / (self.tdbw3 * (N + 1))
+                return V_site * ((nsites - N)) / (self.tdbw3 * (N + 1))
             if op == DEL:
                 return self.tdbw3 * N / (V_site * (nsites - N + 1))
 
