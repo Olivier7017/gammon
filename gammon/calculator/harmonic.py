@@ -249,15 +249,6 @@ class HarmonicCalc(Calculator):
                     if atom1 == atom2:
                         continue
                     d = dist[atom1][atom2]
-                    
-                    if True:
-                        xang1 = cell.cartesian_positions(h_atoms[0][atom1])
-                        xang2 = cell.cartesian_positions(h_atoms[0][atom2])
-                        method1 = d                        
-                        method2 = find_mic(xang1 - xang2, cell=cell, pbc=True)[1]
-                        if abs(method1 - method2) > 1e-5:
-                            raise ValueError("Huge problem")
-
                     if d < self.rcut_swit:
                         return False
 
