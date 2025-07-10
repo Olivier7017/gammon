@@ -240,15 +240,27 @@ class HarmonicCalc(Calculator):
             # Here I could use p1 and p2 if I'm sure the moved atom is
             # always p1 = h_atoms[0][-1] and then p2 = h_atoms[0][:-1]
 
-            dist = get_distances(h_atoms[0], cell=cell, pbc=pbc)[0]
+            h_xangs = cell.cartesian_positions(h_atoms[0])
+            dist = get_distances(h_xangs, cell=cell, pbc=pbc)[1]
+
             # dist will have dimension : [atom1, atom2, xyz]
             for atom1 in range(len(dist)):
                 for atom2 in range(len(dist[atom1])):
                     if atom1 == atom2:
                         continue
-                    d = cell.array.T @ dist[atom1][atom2]
-                    if sum([x**2 for x in d])**(1/2) < self.rcut_swit:
+                    d = dist[atom1][atom2]
+                    
+                    if True:
+                        xang1 = cell.cartesian_positions(h_atoms[0][atom1])
+                        xang2 = cell.cartesian_positions(h_atoms[0][atom2])
+                        method1 = d                        
+                        method2 = find_mic(xang1 - xang2, cell=cell, pbc=True)[1]
+                        if abs(method1 - method2) > 1e-5:
+                            raise ValueError("Huge problem")
+
+                    if d < self.rcut_swit:
                         return False
+
         return True
 
     def get_interaction_energy(self, crystal, h_atoms):
