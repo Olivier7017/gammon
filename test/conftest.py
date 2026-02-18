@@ -1,7 +1,7 @@
 import os
 import subprocess
 
-total_nsites = 138
+total_nsites = 144
 
 
 def find_data_path(root):

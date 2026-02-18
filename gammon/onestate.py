@@ -49,8 +49,8 @@ class OneState:
 
         # Preparation
         self.calc.prepare_calc(struct)
-        
-        if self.is_fixed_lattice: 
+
+        if self.is_fixed_lattice:
             if (prob[MOV] + prob[VOP] + prob[VOM]) > 1e-8:
                 e = "Cannot have operation MOV, VOM, VOP in fixed lattice"
                 raise ValueError(e)
@@ -132,19 +132,19 @@ class OneState:
         """
         Calculate the prefactor for the metropolis algorithm according to
         Mov/Swp : 1
-        Normal GCMC lattice : 
+        Normal GCMC lattice :
          Add : V_abs/V * 1/L^3 * V/(N+1) or 1
          Del : L^3*N/V
         Fixed Site GCMC :
-         Add : (nsite-N)/(N+1) -> I don't think there is 1/L^3 ... to confirm  
-         Del : N / (nsite-N+1) -> I don't think there is L^3 ... to confirm  
+         Add : (nsite-N)/(N+1)
+         Del : N / (nsite-N+1)
 
         Note : There is another factor corresponding to the add which is only
                done in an absorption site. It is calculated in calc_prob
         """
         if op == MOV or op == SWP or op == VOP or op == VOM:
             return 1
-        
+
         nsites = len(self.struct.abs_sites)
         N = self.struct.nH
 
@@ -154,13 +154,11 @@ class OneState:
             if op == DEL:
                 return N / (nsites - N + 1)
         else:
-            V = self.struct.get_volume()
             V_site = self.struct.get_onesite_volume()
             if op == ADD:
                 return V_site * ((nsites - N)) / (self.tdbw3 * (N + 1))
             if op == DEL:
                 return self.tdbw3 * N / (V_site * (nsites - N + 1))
-
 
     def calc_prob(self):
         """
@@ -168,17 +166,7 @@ class OneState:
         """
         # Renormalized just to be safe
         prob = self.prob.copy()
-        return np.cumsum(prob / np.sum(prob))  
-        
-        # Old scheme which may be wrong
-        #prob = self.prob.copy()
-        #abs_V = self.struct.get_absorption_volume()
-        #V = self.struct.get_volume()
-        #if self.struct.only_add_empty:  # Only insert in empty sites
-        #    nsites = len(self.struct.abs_sites)
-        #    abs_V = abs_V * ((nsites - self.struct.nH) / nsites)
-        #prob[2] = prob[2] * (abs_V/V)
-        #return np.cumsum(prob / np.sum(prob))
+        return np.cumsum(prob / np.sum(prob))
 
     def sample(self, operation, isaccepted):
         """

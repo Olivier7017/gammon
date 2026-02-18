@@ -18,10 +18,10 @@ def get_nd3_data(quantum_corr=False, hse_corr=True, zpe_corr=False):
     ifcs = np.load(data_dir / "nd3_ifc.npy")
     xreds = np.load(data_dir / "nd3_xred.npy")
     e0s = np.load(data_dir / "nd3_e0s.npy")
-    
+
     if quantum_corr and zpe_corr:
         raise ValueError("Choose one between quantum_corr and zpe_corr")
-    
+
     if quantum_corr:
         vibes = np.load(data_dir / "nd3_vibe.npy")
         e0s += vibes

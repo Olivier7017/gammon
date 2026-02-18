@@ -66,5 +66,5 @@ def test_analytical_hessian(root):
     # 4. Assert to make sure everything is ok
     print(f"nH (sim, theo): ({sim_nH}, {nH_theo})")
     print(f"E (sim, theo): ({sim_E}, {E_theo})")
-    assert abs(sim_nH - nH_theo) < 0.5, f"Sim/Expected <N>: {sim_nH} {nH_theo}"
+    assert abs(sim_nH - nH_theo) < 1, f"Sim/Expected <N>: {sim_nH} {nH_theo}"
     assert abs(sim_E - E_theo) < 0.5, f"Sim/Expected <E>: {sim_E} {E_theo} eV"

@@ -4,7 +4,7 @@ import shutil
 import copy
 from pathlib import Path
 from ase.geometry import find_mic
-import numpy as np 
+import numpy as np
 
 from gammon import GCMC, Structure
 from gammon.calculator import HarmonicCalc
@@ -104,7 +104,6 @@ def test_20_restart_harmonic(root):
                 raise RuntimeError(e)
 
     # Verify that Switendick criterion is respected
-    
     for state in gcmc2.states:
         cell = state.struct.atoms.cell
         hang = cell.cartesian_positions(state.struct.h_atoms[0])
@@ -112,10 +111,9 @@ def test_20_restart_harmonic(root):
             dist = find_mic(hang[i] - hang, cell=cell, pbc=True)[1]
             print(dist)
             dist[i] += 999
-            if np.any(dist < rcut_swit):                
+            if np.any(dist < rcut_swit):
                 raise ValueError("Switendick not respected")
-            
-        
+
     # Cleanup
     shutil.rmtree("gcmc1")
     shutil.rmtree("gcmc2")

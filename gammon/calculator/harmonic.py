@@ -189,6 +189,8 @@ class HarmonicCalc(Calculator):
                 s = ("Something went wrong, 2 different path to get to the" +
                      " same site gave different Hessian coef. Here is the " +
                      f"symmetry operation list (rot-trans):\n {symop}\n" +
+                     f"The initial site is {irr} and the transformed site" +
+                     f" is {site}. " +
                      "Here is the different dfpt_coefficient" +
                      f"\n{c}\n And here the original hessian\n" +
                      f"{coef_list[0]}\n and the original xred site {irr}")
